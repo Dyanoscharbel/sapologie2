@@ -67,6 +67,7 @@ interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
+  gender?: string;
   name: string;
   avatarBase64?: string;
   participant?: {
@@ -94,6 +95,7 @@ export default function EditProfilePage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [avatarBase64, setAvatarBase64] = useState<string | undefined>(undefined);
@@ -131,6 +133,7 @@ export default function EditProfilePage() {
         setFirstName(userData.firstName || '');
         setLastName(userData.lastName || '');
         setEmail(userData.email || '');
+        setGender(userData.gender || 'non-specifie');
         setAvatarBase64(userData.avatarBase64);
         setAvatarPreview(userData.avatarBase64 ? `data:image/jpeg;base64,${userData.avatarBase64}` : undefined);
         

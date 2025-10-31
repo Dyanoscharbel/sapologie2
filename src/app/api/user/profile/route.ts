@@ -30,6 +30,7 @@ export async function GET(request: Request) {
         u.email,
         u.first_name,
         u.last_name,
+        u.gender,
         u.avatar_base64,
         u.created_at,
         u.is_active,
@@ -106,6 +107,7 @@ export async function GET(request: Request) {
         email: userData.email,
         firstName: userData.first_name,
         lastName: userData.last_name,
+        gender: userData.gender,
         name: `${userData.first_name} ${userData.last_name}`,
         avatarBase64: userData.avatar_base64,
         createdAt: new Date(userData.created_at).toLocaleDateString('fr-FR'),
@@ -176,11 +178,12 @@ export async function PUT(request: Request) {
       password,
       avatarBase64,
       participant,
-      socialLinks
+      socialLinks,
+      gender
     } = body;
 
     // Mettre à jour les informations de l'utilisateur
-    if (firstName || lastName || email || password || avatarBase64 !== undefined) {
+    if (firstName || lastName || email || password || avatarBase64 !== undefined || gender !== undefined) {
       const updates = [];
       const values = [];
 
@@ -219,6 +222,10 @@ export async function PUT(request: Request) {
       if (avatarBase64 !== undefined) {
         updates.push('avatar_base64 = ?');
         values.push(avatarBase64);
+      }
+      if (gender !== undefined) {
+        updates.push('gender = ?');
+        values.push(gender);
       }
 
       if (updates.length > 0) {

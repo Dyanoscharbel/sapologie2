@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const userData = await request.json();
     
     // Validation des données requises
-    if (!userData.email || !userData.password || !userData.first_name || !userData.last_name || !userData.country || !userData.phone) {
+    if (!userData.email || !userData.password || !userData.first_name || !userData.last_name || !userData.gender || !userData.country || !userData.phone) {
       return NextResponse.json(
         { success: false, message: 'Tous les champs sont requis' },
         { status: 400 }

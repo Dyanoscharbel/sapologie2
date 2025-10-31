@@ -74,6 +74,7 @@ interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
+  gender?: string;
   name: string;
   avatarBase64?: string;
   participant?: {
@@ -101,6 +102,7 @@ export default function EditProfilePage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [avatarBase64, setAvatarBase64] = useState<string | undefined>(undefined);
@@ -138,6 +140,7 @@ export default function EditProfilePage() {
         setFirstName(userData.firstName || '');
         setLastName(userData.lastName || '');
         setEmail(userData.email || '');
+        setGender(userData.gender || 'non-specifie');
         setAvatarBase64(userData.avatarBase64);
         setAvatarPreview(userData.avatarBase64 ? `data:image/jpeg;base64,${userData.avatarBase64}` : undefined);
         
@@ -356,6 +359,7 @@ export default function EditProfilePage() {
           firstName,
           lastName,
           email,
+          gender: gender === 'non-specifie' ? undefined : gender,
           password: password || undefined,
           avatarBase64,
           participant: user?.participant ? {
@@ -505,6 +509,21 @@ export default function EditProfilePage() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Genre</Label>
+                  <Select value={gender} onValueChange={setGender}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner votre genre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="non-specifie">Non spécifié</SelectItem>
+                      <SelectItem value="Homme">Homme</SelectItem>
+                      <SelectItem value="Femme">Femme</SelectItem>
+                      <SelectItem value="Autre">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

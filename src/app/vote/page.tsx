@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Crown, Heart, Trophy, Filter, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,21 +9,47 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Navigation, Footer } from "@/components/navigation";
-import { mockParticipants } from "@/lib/participants-data";
+import { mockParticipants, Participant } from "@/lib/participants-data";
 
 export default function VotePage() {
   const [participants, setParticipants] = useState([...mockParticipants]);
   const [votedFor, setVotedFor] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("votes");
-  const [filterBy, setFilterBy] = useState("all");
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredAndSortedParticipants = participants
-    .filter(participant => filterBy === "all" || participant.category === filterBy)
-    .sort((a, b) => {
+  const participantsByGender = useMemo(
+    () => ({
+      Masculin: participants.filter(participant => participant.gender === "Masculin"),
+      Féminin: participants.filter(participant => participant.gender === "Féminin")
+    }),
+    [participants]
+  );
+
+  const filteredByGender = useMemo(() => {
+    if (genderFilter === "all") {
+      return participants;
+    }
+    return participantsByGender[genderFilter as keyof typeof participantsByGender] ?? [];
+  }, [genderFilter, participants, participantsByGender]);
+
+  const filteredBySearch = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return filteredByGender;
+    }
+    const safeTerm = searchTerm.trim().toLowerCase();
+    return filteredByGender.filter(participant =>
+      participant.name.toLowerCase().includes(safeTerm)
+    );
+  }, [filteredByGender, searchTerm]);
+
+  const filteredAndSortedParticipants = useMemo(() => {
+    return [...filteredBySearch].sort((a, b) => {
       switch (sortBy) {
         case "votes":
-          return b.votes - a.votes;
+          return (b.votes ?? 0) - (a.votes ?? 0);
         case "name":
           return a.name.localeCompare(b.name);
         case "recent":
@@ -32,6 +58,7 @@ export default function VotePage() {
           return 0;
       }
     });
+  }, [filteredBySearch, sortBy]);
 
   const handleVote = (participantId: number) => {
     if (!votedFor.includes(participantId)) {
@@ -59,7 +86,57 @@ export default function VotePage() {
     }
   };
 
-  const categories = ["all", "Classique", "Streetwear", "Elegant", "Tendance", "Chic"];
+  const renderPodiumParticipant = (participant: Participant, index: number) => (
+    <div key={participant.id} className="text-center space-y-4">
+      <div className="flex justify-center">
+        {getRankIcon(index)}
+      </div>
+      <Avatar className="h-24 w-24 mx-auto ring-4 ring-primary/20">
+        <AvatarImage src={participant.photos[0]} alt={participant.name} />
+        <AvatarFallback className="text-2xl">
+          {participant.name.charAt(0)}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <h3 className="font-bold text-lg">{participant.name}</h3>
+        <Badge variant={index === 0 ? "default" : "secondary"} className="mt-2">
+          <Heart className="h-3 w-3 mr-1" aria-hidden="true" />
+          {participant.votes} votes
+        </Badge>
+      </div>
+    </div>
+  );
+
+  const genders = ["all", "Masculin", "Féminin"];
+  const participantsByGenderFiltered = useMemo(
+    () => ({
+      Masculin: filteredAndSortedParticipants.filter(participant => participant.gender === "Masculin"),
+      Féminin: filteredAndSortedParticipants.filter(participant => participant.gender === "Féminin")
+    }),
+    [filteredAndSortedParticipants]
+  );
+
+  const podiumParticipantsByGender = useMemo(
+    () => ({
+      Masculin: [...(participantsByGender["Masculin"] ?? [])].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)),
+      Féminin: [...(participantsByGender["Féminin"] ?? [])].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0))
+    }),
+    [participantsByGender]
+  );
+
+  const podiumGroups = useMemo(() => {
+    const gendersList = genderFilter === "all"
+      ? (["Masculin", "Féminin"] as const)
+      : ([genderFilter as "Masculin" | "Féminin"]);
+    return gendersList
+      .map(gender => ({
+        gender,
+        participants: podiumParticipantsByGender[gender]?.slice(0, 3) ?? []
+      }))
+      .filter(group => group.participants.length > 0);
+  }, [genderFilter, podiumParticipantsByGender]);
+
+  const gendersToDisplay = genderFilter === "all" ? ["Masculin", "Féminin"] : [genderFilter];
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-background via-muted/30 to-background flex flex-col">
@@ -114,34 +191,46 @@ export default function VotePage() {
                     <Filter className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                     <span className="font-semibold">Filtres et tri</span>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="category-filter" className="text-sm text-muted-foreground">Catégorie:</label>
-                      <Select value={filterBy} onValueChange={setFilterBy}>
-                        <SelectTrigger className="w-40" id="category-filter">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Toutes</SelectItem>
-                          {categories.slice(1).map(category => (
-                            <SelectItem key={category} value={category}>{category}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-4 w-full">
+                    <div className="flex items-center gap-2 w-full lg:max-w-sm">
+                      <label htmlFor="search" className="text-sm text-muted-foreground whitespace-nowrap">Recherche:</label>
+                      <Input
+                        id="search"
+                        value={searchTerm}
+                        onChange={event => setSearchTerm(event.target.value)}
+                        placeholder="Rechercher un participant"
+                        className="flex-1"
+                      />
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="sort-filter" className="text-sm text-muted-foreground">Trier par:</label>
-                      <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-40" id="sort-filter">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="votes">Votes</SelectItem>
-                          <SelectItem value="name">Nom</SelectItem>
-                          <SelectItem value="recent">Plus récents</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex items-center gap-2">
+                        <label htmlFor="gender-filter" className="text-sm text-muted-foreground">Genre:</label>
+                        <Select value={genderFilter} onValueChange={setGenderFilter}>
+                          <SelectTrigger className="w-40" id="gender-filter">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {genders.map(option => (
+                              <SelectItem key={option} value={option}>{option === "all" ? "Tous" : option}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <label htmlFor="sort-filter" className="text-sm text-muted-foreground">Trier par:</label>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                          <SelectTrigger className="w-40" id="sort-filter">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="votes">Votes</SelectItem>
+                            <SelectItem value="name">Nom</SelectItem>
+                            <SelectItem value="recent">Plus récents</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -151,7 +240,7 @@ export default function VotePage() {
         </section>
 
         {/* Podium */}
-        {filterBy === "all" && sortBy === "votes" && (
+        {sortBy === "votes" && podiumGroups.length > 0 && (
           <section className="pb-12">
             <div className="container-premium">
               <Card className="card-premium overflow-hidden relative">
@@ -164,28 +253,22 @@ export default function VotePage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="relative">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {filteredAndSortedParticipants.slice(0, 3).map((participant, index) => (
-                      <div key={participant.id} className="text-center space-y-4">
-                        <div className="flex justify-center">
-                          {getRankIcon(index)}
+                  {genderFilter === "all" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {podiumGroups.map(group => (
+                        <div key={group.gender} className="space-y-6">
+                          <h3 className="text-xl font-semibold text-center">{group.gender}</h3>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            {group.participants.map((participant, index) => renderPodiumParticipant(participant, index))}
+                          </div>
                         </div>
-                        <Avatar className="h-24 w-24 mx-auto ring-4 ring-primary/20">
-                          <AvatarImage src={participant.photos[0]} alt={participant.name} />
-                          <AvatarFallback className="text-2xl">
-                            {participant.name.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <h3 className="font-bold text-lg">{participant.name}</h3>
-                          <Badge variant={index === 0 ? "default" : "secondary"} className="mt-2">
-                            <Heart className="h-3 w-3 mr-1" aria-hidden="true" />
-                            {participant.votes} votes
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      {podiumGroups[0]?.participants.slice(0, 3).map((participant, index) => renderPodiumParticipant(participant, index))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -194,92 +277,112 @@ export default function VotePage() {
 
         {/* Participants Grid */}
         <section className="pb-16">
-          <div className="container-premium">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredAndSortedParticipants.map((participant, index) => (
-                <Card key={participant.id} className="card-premium overflow-hidden group">
-                  {/* Rank Badge */}
-                  <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm rounded-full p-2 shadow-md">
-                    {getRankIcon(index)}
-                  </div>
-                  
-                  {/* Category Badge */}
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge variant="outline" className="bg-background/90 backdrop-blur-sm">
-                      {participant.category}
+          <div className="container-premium space-y-12">
+            {gendersToDisplay.map(gender => {
+              const list = participantsByGenderFiltered[gender as keyof typeof participantsByGenderFiltered] ?? [];
+              return (
+                <div key={gender} className="space-y-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-2xl font-semibold">{gender}</h2>
+                      <p className="text-sm text-muted-foreground">Découvrez les talents {gender === "Féminin" ? "féminins" : "masculins"}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
+                      {list.length} participant{list.length > 1 ? "s" : ""}
                     </Badge>
                   </div>
 
-                  <CardHeader className="text-center pb-4">
-                    <div className="relative">
-                      <div className="aspect-square bg-muted rounded-2xl overflow-hidden mb-4">
-                        <img
-                          src={participant.photos[0]}
-                          alt={`Style de ${participant.name}`}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      </div>
-                      
-                      {participant.photos.length > 1 && (
-                        <div className="flex justify-center gap-1 mb-4">
-                          {participant.photos.slice(0, 4).map((photo, photoIndex) => (
-                            <div key={photoIndex} className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-background shadow-sm">
-                              <img
-                                src={photo}
-                                alt={`Photo ${photoIndex + 1}`}
-                                className="w-full h-full object-cover"
-                              />
+                  {list.length === 0 ? (
+                    <div className="card-premium p-6 text-sm text-muted-foreground">
+                      Aucun participant dans cette catégorie actuellement.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {list.map((participant, index) => (
+                        <Card key={participant.id} className="card-premium overflow-hidden group">
+                          <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm rounded-full p-2 shadow-md">
+                            {getRankIcon(index)}
+                          </div>
+                          <div className="absolute top-4 right-4 z-10">
+                            <Badge variant="outline" className="bg-background/90 backdrop-blur-sm">
+                              {participant.category}
+                            </Badge>
+                          </div>
+
+                          <CardHeader className="text-center pb-4">
+                            <div className="relative">
+                              <div className="aspect-square bg-muted rounded-2xl overflow-hidden mb-4">
+                                <img
+                                  src={participant.photos[0]}
+                                  alt={`Style de ${participant.name}`}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                              </div>
+
+                              {participant.photos.length > 1 && (
+                                <div className="flex justify-center gap-1 mb-4">
+                                  {participant.photos.slice(0, 4).map((photo, photoIndex) => (
+                                    <div key={photoIndex} className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-background shadow-sm">
+                                      <img
+                                        src={photo}
+                                        alt={`Photo ${photoIndex + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-                      )}
+
+                            <CardTitle className="text-xl">{participant.name}</CardTitle>
+                            <CardDescription className="text-sm mt-2">
+                              {participant.bio.length > 80 ? participant.bio.substring(0, 80) + "..." : participant.bio}
+                            </CardDescription>
+                          </CardHeader>
+
+                          <CardContent className="space-y-4">
+                            {participant.socialLinks && Object.keys(participant.socialLinks).length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(participant.socialLinks).slice(0, 3).map(([platform]) => (
+                                  <Badge key={platform} variant="secondary" className="text-xs">
+                                    {platform}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
+                            <Separator />
+
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Heart className={`h-4 w-4 ${votedFor.includes(participant.id) ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'}`} aria-hidden="true" />
+                                <span className="font-semibold">{participant.votes}</span>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button 
+                                  onClick={() => handleVote(participant.id)}
+                                  disabled={votedFor.includes(participant.id)}
+                                  size="sm"
+                                  variant={votedFor.includes(participant.id) ? "default" : "outline"}
+                                  className={votedFor.includes(participant.id) ? "bg-rose-500 hover:bg-rose-600" : "hover-lift"}
+                                >
+                                  {votedFor.includes(participant.id) ? "Voté !" : "Voter"}
+                                </Button>
+                                <Button variant="ghost" size="sm" asChild>
+                                  <Link href={`/participant/${participant.id}`}>
+                                    Voir
+                                  </Link>
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-
-                    <CardTitle className="text-xl">{participant.name}</CardTitle>
-                    <CardDescription className="text-sm mt-2">
-                      {participant.bio.length > 80 ? participant.bio.substring(0, 80) + "..." : participant.bio}
-                    </CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    {participant.socialLinks && Object.keys(participant.socialLinks).length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(participant.socialLinks).slice(0, 3).map(([platform, handle]) => (
-                          <Badge key={platform} variant="secondary" className="text-xs">
-                            {platform}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Heart className={`h-4 w-4 ${votedFor.includes(participant.id) ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'}`} aria-hidden="true" />
-                        <span className="font-semibold">{participant.votes}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleVote(participant.id)}
-                          disabled={votedFor.includes(participant.id)}
-                          size="sm"
-                          variant={votedFor.includes(participant.id) ? "default" : "outline"}
-                          className={votedFor.includes(participant.id) ? "bg-rose-500 hover:bg-rose-600" : "hover-lift"}
-                        >
-                          {votedFor.includes(participant.id) ? "Voté !" : "Voter"}
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/participant/${participant.id}`}>
-                            Voir
-                          </Link>
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>

@@ -21,6 +21,7 @@ export const mockParticipants = [
     joinDate: "15 décembre 2024",
     location: "Paris, France",
     age: 25,
+    gender: "Masculin",
     favoriteStyle: "Smart Casual",
     inspiration: "Je m'inspire des icônes de mode intemporelles comme Cary Grant et Steve McQueen."
   },
@@ -44,6 +45,7 @@ export const mockParticipants = [
     joinDate: "20 décembre 2024",
     location: "Lyon, France",
     age: 23,
+    gender: "Masculin",
     favoriteStyle: "Urban Streetwear",
     inspiration: "Les cultures urbaines et les collaborations entre marques de luxe et streetwear."
   },
@@ -68,6 +70,7 @@ export const mockParticipants = [
     joinDate: "10 décembre 2024",
     location: "Monaco",
     age: 28,
+    gender: "Masculin",
     favoriteStyle: "Business Luxury",
     inspiration: "L'élégance italienne et le savoir-faire français de la haute couture."
   },
@@ -90,6 +93,7 @@ export const mockParticipants = [
     joinDate: "25 décembre 2024",
     location: "Marseille, France",
     age: 21,
+    gender: "Masculin",
     favoriteStyle: "Bold & Colorful",
     inspiration: "Les défilés de haute couture et les tendances émergentes des réseaux sociaux."
   },
@@ -113,6 +117,7 @@ export const mockParticipants = [
     joinDate: "18 décembre 2024",
     location: "Nice, France",
     age: 26,
+    gender: "Féminin",
     favoriteStyle: "Feminine Chic",
     inspiration: "Les icônes de style comme Audrey Hepburn et les créateurs comme Chanel."
   }

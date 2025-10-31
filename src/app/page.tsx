@@ -3,6 +3,7 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Crown, Heart, Star, Sparkles, TrendingUp, Users, Award } from "lucide-react";
+import { FaInstagram, FaFacebook, FaTiktok, FaYoutube, FaTwitter } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,57 @@ export default function Home() {
   const [scrollDirection, setScrollDirection] = useState(1); // 1 = down, -1 = up
   const lastScrollY = useRef(0);
   
-  const trending = useMemo(() => [...participants].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)).slice(0, 3), []);
+  const participantsMasculin = useMemo(
+    () => participants.filter((p) => p.gender === "Masculin"),
+    []
+  );
+  const participantsFeminin = useMemo(
+    () => participants.filter((p) => p.gender === "Féminin"),
+    []
+  );
+  const trendingMasculin = useMemo(
+    () => [...participantsMasculin].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)).slice(0, 3),
+    [participantsMasculin]
+  );
+  const trendingFeminin = useMemo(
+    () => [...participantsFeminin].sort((a, b) => (b.votes ?? 0) - (a.votes ?? 0)).slice(0, 3),
+    [participantsFeminin]
+  );
+  const socialChannels = useMemo(
+    () => [
+      {
+        name: "Instagram",
+        href: "https://www.instagram.com/leroidelasapologie",
+        icon: FaInstagram,
+        label: "Suivez-nous sur Instagram"
+      },
+      {
+        name: "Facebook",
+        href: "https://www.facebook.com/leroidelasapologie",
+        icon: FaFacebook,
+        label: "Rejoignez-nous sur Facebook"
+      },
+      {
+        name: "TikTok",
+        href: "https://www.tiktok.com/@leroidelasapologie",
+        icon: FaTiktok,
+        label: "Découvrez nos vidéos TikTok"
+      },
+      {
+        name: "YouTube",
+        href: "https://www.youtube.com/@leroidelasapologie",
+        icon: FaYoutube,
+        label: "Regardez nos coulisses sur YouTube"
+      },
+      {
+        name: "Twitter",
+        href: "https://twitter.com/leroisapologie",
+        icon: FaTwitter,
+        label: "Suivez l'actualité sur Twitter"
+      }
+    ],
+    []
+  );
   const juryPick = useMemo(() => participants.slice(0, 3), []);
 
   const handleVote = (participantId: number) => {
@@ -259,23 +310,15 @@ export default function Home() {
               {/* Hero Image */}
               <motion.div
                 style={{
-                  x: heroImageX,
-                  y: heroImageY,
-                  scale: heroImageScale,
-                  rotateX: heroImageRotateX,
                   opacity: heroImageOpacity,
-                  transformPerspective: 1200,
                 }}
-                className="relative will-change-transform"
+                className="relative"
               >
-                <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/50 transition-all duration-300 ease-out hover:shadow-2xl hover:border-primary/20 hover:-translate-y-0.5 group">
-                  <motion.img
+                <div className="relative w-full aspect-[3/4] rounded-3xl overflow-hidden bg-white shadow-sm border border-gray-200/50">
+                  <img
                     src="/couple.jpg"
                     alt="Portrait élégant du concours de sapologie"
-                    className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                    style={{
-                      scale: useTransform(smoothProgress, [0, 0.25], [1.02, 1]),
-                    }}
+                    className="absolute inset-0 h-full w-full object-cover object-center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" aria-hidden="true" />
                   
@@ -303,6 +346,45 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="py-14 bg-primary/5">
+          <div className="container-premium space-y-8">
+            <div className="max-w-2xl space-y-3">
+              <span className="uppercase text-xs tracking-[0.3em] text-primary">Réseaux sociaux</span>
+              <h2 className="text-3xl sm:text-4xl font-bold">Suivez l'aventure sapologie au quotidien</h2>
+              <p className="text-muted-foreground">Coulisses, looks exclusifs, interviews des participants et annonces en direct vous attendent sur nos plateformes.</p>
+            </div>
+
+            <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-white">
+              <motion.div
+                className="flex items-center gap-8 px-10 py-6"
+                animate={{ x: ["0%", "-50%"] }}
+                transition={{ duration: 22, ease: "linear", repeat: Infinity }}
+              >
+                {[...socialChannels, ...socialChannels].map((channel, index) => {
+                  const Icon = channel.icon;
+                  return (
+                    <Link
+                      key={`${channel.name}-${index}`}
+                      href={channel.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 rounded-2xl bg-white/10 px-6 py-3 backdrop-blur transition hover:bg-white/20"
+                    >
+                      <Icon className="h-6 w-6" aria-hidden="true" />
+                      <div className="text-left">
+                        <p className="text-sm font-semibold">{channel.name}</p>
+                        <p className="text-xs text-white/70">{channel.label}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </motion.div>
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-neutral-900 via-neutral-900/20 to-transparent" aria-hidden="true" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-neutral-900 via-neutral-900/20 to-transparent" aria-hidden="true" />
+            </div>
+          </div>
+        </section>
+
         {/* Trending Section */}
         <section className="py-16 bg-muted/30">
           <div className="container-premium">
@@ -319,65 +401,88 @@ export default function Home() {
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {trending.map((participant, index) => (
-                <motion.article 
-                  key={participant.id} 
-                  className="card-premium overflow-hidden group p-3 sm:p-4"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: false, amount: 0.2, margin: "100px" }}
-                  variants={{
-                    hidden: {
-                      scaleY: 0,
-                      opacity: 0
-                    },
-                    visible: {
-                      scaleY: 1,
-                      opacity: 1
-                    }
-                  }}
-                  custom={scrollDirection}
-                  transition={{
-                    duration: 0.7,
-                    delay: index * 0.15,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                  style={{
-                    transformOrigin: scrollDirection > 0 ? "bottom" : "top"
-                  }}
-                >
-                  <div className="relative aspect-square rounded-xl overflow-hidden">
-                    <img 
-                      src={participant.photos?.[0] || `https://images.unsplash.com/photo-149036753220${index}-b9bc1dc483f6?w=400&h=400&fit=crop`} 
-                      alt={`Style de ${participant.name}`}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <Badge className="absolute top-4 left-4 bg-white/90 text-foreground">
-                      #{index + 1}
+            <div className="grid gap-10 lg:grid-cols-2">
+              {[
+                { title: "Catégorie masculine", list: trendingMasculin },
+                { title: "Catégorie féminine", list: trendingFeminin }
+              ].map(({ title, list }) => (
+                <div key={title} className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-semibold">{title}</h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {list.length} sélectionné{list.length > 1 ? "s" : ""}
                     </Badge>
                   </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl">
-                      <Link href={`/participant/${participant.id}`} className="hover:text-primary transition-colors">
-                        {participant.name}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription>{participant.category ?? "Style"}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Heart className="h-4 w-4 text-rose-500" aria-hidden="true" />
-                        <span className="font-semibold">{participant.votes ?? 0}</span>
-                        <span>votes</span>
+                  <div className="grid grid-cols-1 gap-6">
+                    {list.length > 0 ? (
+                      list.map((participant, index) => (
+                        <motion.article
+                          key={participant.id}
+                          className="card-premium group p-4 md:flex md:items-center md:gap-5"
+                          initial="hidden"
+                          whileInView="visible"
+                          viewport={{ once: false, amount: 0.2, margin: "100px" }}
+                          variants={{
+                            hidden: {
+                              scaleY: 0,
+                              opacity: 0
+                            },
+                            visible: {
+                              scaleY: 1,
+                              opacity: 1
+                            }
+                          }}
+                          custom={scrollDirection}
+                          transition={{
+                            duration: 0.7,
+                            delay: index * 0.15,
+                            ease: [0.22, 1, 0.36, 1]
+                          }}
+                          style={{
+                            transformOrigin: scrollDirection > 0 ? "bottom" : "top"
+                          }}
+                        >
+                          <div className="relative h-48 w-full rounded-xl overflow-hidden md:h-56 md:w-40">
+                            <img
+                              src={participant.photos?.[0] || `https://images.unsplash.com/photo-149036753220${index}-b9bc1dc483f6?w=400&h=400&fit=crop`}
+                              alt={`Style de ${participant.name}`}
+                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <Badge className="absolute top-3 left-3 bg-white/90 text-foreground">
+                              #{index + 1}
+                            </Badge>
+                          </div>
+                          <div className="flex-1 space-y-4">
+                            <CardHeader className="px-0 pt-0">
+                              <CardTitle className="text-xl">
+                                <Link href={`/participant/${participant.id}`} className="hover:text-primary transition-colors">
+                                  {participant.name}
+                                </Link>
+                              </CardTitle>
+                              <CardDescription>{participant.category ?? "Style"}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="px-0 pb-0">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Heart className="h-4 w-4 text-rose-500" aria-hidden="true" />
+                                  <span className="font-semibold">{participant.votes ?? 0}</span>
+                                  <span>votes</span>
+                                </div>
+                                <Button variant="outline" size="sm" className="hover-lift" asChild>
+                                  <Link href={`/participant/${participant.id}`}>Voir le profil</Link>
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </div>
+                        </motion.article>
+                      ))
+                    ) : (
+                      <div className="card-premium p-6 text-sm text-muted-foreground">
+                        Aucun participant pour cette catégorie pour le moment.
                       </div>
-                      <Button variant="outline" size="sm" className="hover-lift" asChild>
-                        <Link href={`/participant/${participant.id}`}>Voir le profil</Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </motion.article>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -476,70 +581,99 @@ export default function Home() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {participants.map((participant) => (
-                <article key={participant.id} className="card-premium overflow-hidden group p-3 sm:p-4">
-                  <CardHeader className="text-center pb-4">
-                    <Link 
-                      href={`/participant/${participant.id}`} 
-                      className="block"
-                    >
-                      <Avatar className="h-24 w-24 mx-auto mb-4 ring-2 ring-muted group-hover:ring-primary transition-all">
-                        <AvatarImage src={participant.photos?.[0] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.name}`} alt={participant.name} />
-                        <AvatarFallback className="text-2xl">
-                          {participant.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                        {participant.name}
-                      </CardTitle>
-                      <CardDescription className="mt-2">
-                        {participant.category ?? "Style"}
-                      </CardDescription>
-                    </Link>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {participant.bio}
-                    </p>
-                    
-                    {participant.socialLinks && Object.keys(participant.socialLinks).length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {Object.entries(participant.socialLinks).slice(0, 2).map(([platform, handle]) => (
-                          <Badge key={platform} variant="secondary" className="text-xs">
-                            {platform}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <Separator />
-                    
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Heart className={`h-4 w-4 ${votedFor.includes(participant.id) ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground'}`} aria-hidden="true" />
-                        <span className="font-semibold">{participant.votes ?? 0}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          onClick={() => handleVote(participant.id)}
-                          disabled={votedFor.includes(participant.id)}
-                          size="sm"
-                          variant={votedFor.includes(participant.id) ? "default" : "outline"}
-                          className={votedFor.includes(participant.id) ? "bg-rose-500 hover:bg-rose-600" : ""}
-                        >
-                          {votedFor.includes(participant.id) ? "Voté !" : "Voter"}
-                        </Button>
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link href={`/participant/${participant.id}`}>
-                            Voir
-                          </Link>
-                        </Button>
-                      </div>
+            <div className="space-y-12">
+              {[
+                { title: "Participants masculins", list: participantsMasculin },
+                { title: "Participants féminins", list: participantsFeminin }
+              ].map(({ title, list }) => (
+                <div key={title} className="space-y-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-semibold">{title}</h3>
+                      <p className="text-sm text-muted-foreground">Styles emblématiques et personnalités inspirantes</p>
                     </div>
-                  </CardContent>
-                </article>
+                    <div className="flex items-center gap-3">
+                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80" asChild>
+                        <Link href="/vote">Voir plus</Link>
+                      </Button>
+                      <Badge variant="secondary" className="text-xs">
+                        {list.length} participant{list.length > 1 ? "s" : ""}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory">
+                      {list.length > 0 ? (
+                        list.map((participant) => (
+                          <article
+                            key={participant.id}
+                            className="card-premium group min-w-[260px] max-w-[260px] flex-shrink-0 snap-center p-4"
+                          >
+                            <CardHeader className="pb-4 text-center">
+                              <Link href={`/participant/${participant.id}`} className="block">
+                                <Avatar className="h-20 w-20 mx-auto mb-4 ring-2 ring-muted group-hover:ring-primary transition-all">
+                                  <AvatarImage src={participant.photos?.[0] || `https://api.dicebear.com/7.x/avataaars/svg?seed=${participant.name}`} alt={participant.name} />
+                                  <AvatarFallback className="text-xl">
+                                    {participant.name.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                                  {participant.name}
+                                </CardTitle>
+                                <CardDescription className="mt-1">
+                                  {participant.category ?? "Style"}
+                                </CardDescription>
+                              </Link>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <p className="text-sm text-muted-foreground line-clamp-3">
+                                {participant.bio}
+                              </p>
+                              {participant.socialLinks && Object.keys(participant.socialLinks).length > 0 && (
+                                <div className="flex flex-wrap gap-2">
+                                  {Object.entries(participant.socialLinks).slice(0, 2).map(([platform]) => (
+                                    <Badge key={platform} variant="secondary" className="text-xs capitalize">
+                                      {platform}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              <Separator />
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Heart className={`h-4 w-4 ${votedFor.includes(participant.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground"}`} aria-hidden="true" />
+                                  <span className="font-semibold">{participant.votes ?? 0}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleVote(participant.id)}
+                                    disabled={votedFor.includes(participant.id)}
+                                    size="sm"
+                                    variant={votedFor.includes(participant.id) ? "default" : "outline"}
+                                    className={votedFor.includes(participant.id) ? "bg-rose-500 hover:bg-rose-600" : ""}
+                                  >
+                                    {votedFor.includes(participant.id) ? "Voté !" : "Voter"}
+                                  </Button>
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <Link href={`/participant/${participant.id}`}>
+                                      Voir
+                                    </Link>
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </article>
+                        ))
+                      ) : (
+                        <div className="card-premium p-6 text-sm text-muted-foreground">
+                          Aucun participant pour cette catégorie pour le moment.
+                        </div>
+                      )}
+                    </div>
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-muted/60 to-transparent" aria-hidden="true" />
+                    <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-muted/60 to-transparent" aria-hidden="true" />
+                  </div>
+                </div>
               ))}
             </div>
           </div>

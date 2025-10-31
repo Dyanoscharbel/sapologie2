@@ -12,11 +12,12 @@ export class AuthService {
     password: string;
     first_name: string;
     last_name: string;
+    gender?: string;
     country?: string;
     phone?: string;
     pseudo?: string;
   }) {
-    const { email, password, first_name, last_name, country, phone, pseudo } = userData;
+    const { email, password, first_name, last_name, gender, country, phone, pseudo } = userData;
     
     // Vérifier si l'email existe déjà
     const existingUsers = await query(
@@ -46,8 +47,8 @@ export class AuthService {
 
     // Créer l'utilisateur - le numéro phone est utilisé aussi comme WhatsApp
     const result = await query(
-      'INSERT INTO users (username, email, password_hash, first_name, last_name, country, country_code, phone, whatsapp, pseudo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, first_name, last_name, country || null, countryCode || null, phone || null, phone || null, pseudo || null]
+      'INSERT INTO users (username, email, password_hash, first_name, last_name, gender, country, country_code, phone, whatsapp, pseudo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [username, email, hashedPassword, first_name, last_name, gender || null, country || null, countryCode || null, phone || null, phone || null, pseudo || null]
     ) as any;
 
     const userId = result.insertId;
@@ -173,7 +174,7 @@ export class AuthService {
       
       // Sinon c'est un utilisateur normal
       const users = await query(
-        'SELECT id, email, first_name, last_name, avatar_base64 FROM users WHERE id = ?',
+        'SELECT id, email, first_name, last_name, gender, avatar_base64 FROM users WHERE id = ?',
         [decoded.userId]
       ) as any[];
 
@@ -192,7 +193,7 @@ export class AuthService {
   }
 
   static async updateUser(userId: number, updates: any) {
-    const allowedFields = ['first_name', 'last_name', 'avatar_base64'];
+    const allowedFields = ['first_name', 'last_name', 'gender', 'avatar_base64'];
     const updateFields = Object.keys(updates)
       .filter(key => allowedFields.includes(key))
       .map(key => `${key} = ?`);
